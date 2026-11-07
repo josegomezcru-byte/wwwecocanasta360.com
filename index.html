@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco Canasta 360 - Planificador Multidisciplinar de Canasta Familiar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #1a3a2a;
+            --primary-light: #2e6b47;
+            --accent: #c8972b;
+            --accent-light: #e8b84b;
+            --neutral-dark: #1c1c1c;
+            --neutral-mid: #4a4a4a;
+            --neutral-light: #f5f3ef;
+            --white: #ffffff;
+            --border: #d6cfc0;
+            --red: #8b2020;
+            --blue: #2563eb;
+            --shadow: 0 4px 24px rgba(0,0,0,0.10);
+            --shadow-lg: 0 8px 40px rgba(0,0,0,0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Source Sans 3', sans-serif;
+            background: #edeae4;
+            min-height: 100vh;
+            color: var(--neutral-dark);
+        }
+
+        /* TOP NAV */
+        .topbar { background: var(--primary); padding: 0 40px; display: flex; align-items: center; justify-content: space-between; min-height: 72px; box-shadow: 0 2px 12px rgba(0,0,0,0.2); flex-wrap: wrap; }
+        .brand { display: flex; align-items: center; gap: 14px; padding: 10px 0; }
+        .brand-name { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--white); letter-spacing: 0.02em; }
+        .brand-tagline { font-size: 0.72rem; color: var(--accent-light); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 300; }
+        .nav-pills { display: flex; gap: 6px; overflow-x: auto; white-space: nowrap; padding: 10px 0; -webkit-overflow-scrolling: touch; }
+        .nav-pill { padding: 8px 14px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: rgba(255,255,255,0.75); letter-spacing: 0.04em; text-transform: uppercase; transition: all 0.2s; flex-shrink: 0; }
+        .nav-pill:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-pill.active { background: var(--accent); color: var(--primary); }
+
+        /* HERO BANNER */
+        .hero { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 60%, #3a7a52 100%); padding: 40px 60px 48px; position: relative; overflow: hidden; }
+        .hero::after { content: ""; position: absolute; right: -60px; top: -60px; width: 340px; height: 340px; border-radius: 50%; background: rgba(200,151,43,0.1); pointer-events: none; }
+        .hero-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 30px; }
+        .hero-text h1 { font-family: 'Playfair Display', serif; font-size: 2.3rem; font-weight: 700; color: var(--white); line-height: 1.15; margin-bottom: 8px; }
+        .hero-text h1 span { color: var(--accent-light); }
+        .hero-text p { color: rgba(255,255,255,0.85); font-size: 0.98rem; font-weight: 300; max-width: 680px; line-height: 1.5; }
+        .hero-divider { width: 48px; height: 3px; background: var(--accent); margin: 10px 0; border-radius: 2px; }
+
+        /* MAIN LAYOUT */
+        .page-body { max-width: 1100px; margin: 0 auto; padding: 32px 24px 60px; }
+
+        /* CARDS */
+        .card { background: var(--white); border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 28px; overflow: hidden; }
+        .card-header { background: var(--neutral-light); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+        .card-header-icon { width: 36px; height: 36px; background: var(--primary); color: var(--accent-light); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; flex-shrink: 0; }
+        .card-header h2 { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; color: var(--primary); }
+        .card-body { padding: 24px; }
+
+        /* FORM */
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--neutral-mid); margin-bottom: 6px; }
+        .input-group input, .input-group select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 0.95rem; font-family: 'Source Sans 3', sans-serif; color: var(--neutral-dark); background: var(--neutral-light); transition: border-color 0.2s, box-shadow 0.2s; }
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(46,107,71,0.12); background: var(--white); }
+        .input-hint { font-size: 0.76rem; color: #777; margin-top: 4px; }
+
+        /* BUTTONS */
+        .button-group { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn { padding: 12px 22px; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; letter-spacing: 0.04em; text-transform: uppercase; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: var(--white); }
+        .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
+        .btn-accent { background: var(--accent); color: var(--primary); }
+        .btn-accent:hover { background: var(--accent-light); transform: translateY(-1px); }
+        .btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: var(--white); transform: translateY(-1px); }
+        .btn-ghost { background: var(--neutral-light); color: var(--neutral-mid); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: var(--border); color: var(--neutral-dark); }
+
+        /* STATS */
+        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; box-shadow: var(--shadow); transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card:nth-child(1) { border-top: 3px solid var(--accent); }
+        .stat-card:nth-child(2) { border-top: 3px solid var(--primary); }
+        .stat-card:nth-child(3) { border-top: 3px solid var(--blue); }
+        .stat-card:nth-child(4) { border-top: 3px solid #2e7d32; }
+        .stat-label { font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--neutral-mid); margin-bottom: 4px; }
+        .stat-value { font-family: 'Playfair Display', serif; font-size: 1.55rem; font-weight: 700; color: var(--neutral-dark); }
+
+        /* TABS */
+        .tabs { display: flex; gap: 2px; border-bottom: 2px solid var(--border); margin-bottom: 20px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab { padding: 12px 18px; cursor: pointer; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--neutral-mid); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; background: transparent; border-top: none; border-left: none; border-right: none; white-space: nowrap; }
+        .tab:hover { color: var(--primary); }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* SHOPPING LIST */
+        .shopping-list { background: var(--white); border-radius: 8px; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid #f0ede7; gap: 15px; }
+        .list-item:last-child { border-bottom: none; }
+        .list-item:hover { background: var(--neutral-light); }
+        .item-info { display: flex; align-items: center; gap: 14px; flex: 1; }
+        .item-category { background: var(--primary); color: var(--white); padding: 3px 8px; border-radius: 3px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; text-align: center; }
+        .item-name { font-weight: 600; color: var(--neutral-dark); font-size: 0.95rem; }
+        .item-details { font-size: 0.8rem; color: #777; margin-top: 2px; }
+        .item-price { font-family: 'Playfair Display', serif; font-weight: 700; color: var(--primary-light); font-size: 1.05rem; white-space: nowrap; }
+
+        /* SUMMARY & SCIENCE DASHBOARD */
+        .summary-box { margin-top: 20px; padding: 18px 20px; background: var(--neutral-light); border-radius: 8px; border-left: 4px solid var(--accent); }
+        .summary-box h4 { font-family: 'Playfair Display', serif; color: var(--primary); font-size: 1rem; margin-bottom: 10px; }
+        .summary-row { display: flex; justify-content: space-between; font-size: 0.88rem; padding: 4px 0; border-bottom: 1px solid var(--border); gap: 15px; }
+        .summary-row:last-child { border-bottom: none; }
+
+        .sci-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .sci-card { background: var(--neutral-light); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+        .sci-card h4 { font-family: 'Playfair Display', serif; color: var(--primary); font-size: 1.05rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .sci-formula { background: #e4dfd5; padding: 8px 12px; border-radius: 5px; font-family: monospace; font-size: 0.85rem; color: var(--primary); margin: 8px 0; overflow-x: auto; }
+
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+        .product-table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 0.88rem; }
+        .product-table th { background: var(--primary); color: var(--white); padding: 10px 14px; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .product-table td { padding: 10px 14px; border-bottom: 1px solid #f0ede7; }
+        .product-table tr:hover td { background: var(--neutral-light); }
+        .category-badge { background: var(--accent); color: var(--primary); padding: 2px 8px; border-radius: 3px; font-size: 0.72rem; font-weight: 700; }
+
+        .tip-card { padding: 16px 20px; border-radius: 8px; border: 1px solid var(--border); background: var(--neutral-light); margin-bottom: 12px; border-left: 4px solid var(--primary-light); display: flex; gap: 14px; align-items: flex-start; }
+        .tip-icon { font-size: 1.2rem; width: 36px; height: 36px; background: var(--primary); color: var(--accent-light); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .tip-content strong { display: block; font-size: 0.88rem; font-weight: 700; color: var(--primary); margin-bottom: 3px; }
+        .tip-content p { font-size: 0.85rem; color: var(--neutral-mid); line-height: 1.4; }
+
+        .spinner { display: none; text-align: center; padding: 40px; }
+        .spinner.active { display: block; }
+        .spinner-ring { width: 42px; height: 42px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .footer { background: var(--primary); color: rgba(255,255,255,0.7); text-align: center; padding: 24px; font-size: 0.82rem; }
+        
+        .pdf-export-container { position: fixed; left: -9999px; top: 0; width: 800px; background: white; padding: 30px; font-family: 'Source Sans 3', sans-serif; }
+
+        /* ASISTENTE (CHATBOT) DISEÑO CAMPESINO */
+        .cb-launch{position:fixed;right:24px;bottom:24px;z-index:9999;display:flex;align-items:center;gap:10px;padding:12px 20px 12px 14px;border:2px solid var(--accent);border-radius:999px;background:var(--primary);color:#fff;font:600 .95rem 'Source Sans 3',sans-serif;cursor:pointer;box-shadow:var(--shadow-lg); transition: background 0.3s;}
+        .cb-launch:hover{background:var(--primary-light)}
+        .cb-launch .avatar-icon{font-size: 20px; line-height: 1;}
+        .cb-panel{position:fixed;right:24px;bottom:92px;z-index:9999;width:392px;height:min(620px,calc(100dvh - 120px));display:none;flex-direction:column;background:var(--neutral-light);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);overflow:hidden;font-family:'Source Sans 3',sans-serif}
+        .cb-panel.open{display:flex; animation: fadeIn 0.3s;}
+        
+        /* Cabecera Rústica Campesina */
+        .cb-head{background:#2e4d3a; color:#fff; padding:14px 16px; border-bottom:4px solid var(--accent); display:flex; align-items:center; gap:12px;}
+        .cb-head-avatar {font-size: 28px; background: rgba(255,255,255,0.1); border-radius: 50%; padding: 4px; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;}
+        .cb-head h3{flex:1;font:700 1.05rem 'Playfair Display',serif; margin: 0;}
+        .cb-head small{display:block;font:300 .75rem 'Source Sans 3',sans-serif;color:var(--accent-light)}
+        .cb-head button{background:none;border:0;color:#fff;font-size:1.3rem;cursor:pointer;padding:4px 10px;border-radius:4px; margin-left: auto;}
+        
+        .cb-log{position:relative;flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+        .cb-msg{max-width:90%;padding:10px 13px;font-size:.93rem;line-height:1.45;border-radius:4px 14px 14px 14px;background:#fff;border:1px solid var(--border);color:var(--neutral-dark)}
+        .cb-msg.me{align-self:flex-end;background:var(--primary-light);color:#fff;border-color:var(--primary);border-radius:14px 4px 14px 14px}
+        .cb-msg b{color:var(--primary)}
+        .cb-msg hr{border:0;border-top:1px solid var(--border);margin:10px 0}
+        .cb-chips{display:flex;flex-wrap:wrap;gap:6px}
+        .cb-chip{border:1px solid var(--primary-light);background:#fff;color:var(--primary);border-radius:999px;padding:6px 12px;font:600 .8rem 'Source Sans 3',sans-serif;cursor:pointer;text-align:left; transition: all 0.2s;}
+        .cb-chip:hover{background:var(--primary);color:#fff}
+        .cb-typing{align-self:flex-start;color:#777;font-size:.85rem; font-style:italic;}
+        .cb-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:#fff}
+        .cb-form input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:.95rem}
+        .cb-form button{background:var(--primary);color:var(--accent-light);border:0;border-radius:8px;padding:0 16px;cursor:pointer;font-weight:700}
+        .cb-note{font-size:.7rem;color:#777;text-align:center;padding:0 12px 8px;background:#fff}
+
+        @media (max-width: 768px) {
+            .topbar { flex-direction: column; align-items: flex-start; padding: 15px 20px; gap: 10px; height: auto; }
+            .nav-pills { width: 100%; padding-bottom: 5px; }
+            .hero { padding: 30px 20px; }
+            .hero-text h1 { font-size: 1.8rem; }
+            .card-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .button-group { flex-direction: column; } .btn { width: 100%; }
+            .list-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .item-price { align-self: flex-end; }
+        }
+        @media (max-width: 560px) {
+            .cb-panel { inset: 0; width: auto; height: 100dvh; border-radius: 0; border: 0; }
+            .cb-launch { right: 16px; bottom: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="topbar">
+        <div class="brand">
+            <div>
+                <div class="brand-name">Eco Canasta 360</div>
+                <div class="brand-tagline">Modelo Multidisciplinar Canasta Familiar</div>
+            </div>
+        </div>
+        <div class="nav-pills">
+            <button class="nav-pill active" onclick="cambiarTab('recomendaciones')">La Remesa</button>
+            <button class="nav-pill" onclick="cambiarTab('productos')">Productos de la Tierrita</button>
+            <button class="nav-pill" onclick="cambiarTab('multidisciplinar')">Modelo Científico</button>
+            <button class="nav-pill" onclick="cambiarTab('consejos')">Consejos de la Abuela</button>
+            <button class="nav-pill" onclick="cambiarTab('historial')">Mis Compras</button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-text">
+                <h1>Optimización Inteligente & <span>Modelo Multidisciplinar</span></h1>
+                <p>Plataforma web integrada de Ingeniería de Sistemas, Cálculo Diferencial y Física Mecánica para maximizar la eficiencia nutricional, optimizar el presupuesto y proteger la salud ergonómica de las familias colombianas.</p>
+                <div class="hero-divider"></div>
+            </div>
+        </div>
+    </section>
+
+    <main class="page-body">
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-icon">⚙️</div>
+                <h2>Parámetros de Optimización y Mercado</h2>
+            </div>
+            <div class="card-body">
+                <form id="marketForm" onsubmit="event.preventDefault(); generarPlanificado();">
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label for="presupuesto">Presupuesto Disponible ($ COP)</label>
+                            <input type="number" id="presupuesto" min="10000" step="5000" placeholder="Ej: 200000" required>
+                            <div class="input-hint">Monto máximo para la compra semanal o quincenal</div>
+                        </div>
+                        <div class="input-group">
+                            <label for="integrantes">Integrantes del Hogar</label>
+                            <select id="integrantes" required>
+                                <option value="" selected disabled>Seleccione...</option>
+                                <option value="1">1 Persona (Individual)</option>
+                                <option value="2">2 Personas (Pareja)</option>
+                                <option value="4">3 - 4 Personas (Familia)</option>
+                                <option value="6">5+ Personas (Familia Numerosa)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="preferencia">Enfoque Nutricional / Preferencia</label>
+                            <select id="preferencia" required>
+                                <option value="" selected disabled>Seleccione...</option>
+                                <option value="todas">Balanceado (General)</option>
+                                <option value="Proteínas y Lácteos">Alto Valor Proteico</option>
+                                <option value="Granos y Cereales">Granos y Carbohidratos Complejos</option>
+                                <option value="Frutas y Verduras">Fresco y Agrícola</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="terrenoInclinacion">Inclinación Terreno (Física Mecánica)</label>
+                            <select id="terrenoInclinacion" required>
+                                <option value="" selected disabled>Seleccione...</option>
+                                <option value="0">Plano (0° - Superficie de Centro Comercial)</option>
+                                <option value="3">Leve pendiente (3° - Calle con inclinación)</option>
+                                <option value="7">Rampa exigente (7° - Zona de loma)</option>
+                            </select>
+                            <div class="input-hint">Afecta la Fuerza de Empuje y Torque ejercido</div>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">🚀 Generar Lista y Análisis</button>
+                        <button type="button" class="btn btn-accent" onclick="exportarPDF()">📄 Exportar PDF</button>
+                        <button type="button" class="btn btn-outline" onclick="guardarEnHistorial()">💾 Guardar Historial</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-label">Total Estimado</div>
+                <div class="stat-value" id="statTotal">$0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Presupuesto Restante</div>
+                <div class="stat-value" id="statRestante">$0</div>
+            </div>
+            <div class="stat-card">
+                <!-- Se corrigió el símbolo antiestético por subíndices HTML -->
+                <div class="stat-label">Carga Física (M<sub>total</sub>)</div>
+                <div class="stat-value" id="statMasa">0.0 kg</div>
+            </div>
+            <div class="stat-card">
+                <!-- Se corrigió el símbolo antiestético por subíndices HTML -->
+                <div class="stat-label">Costo Marginal Prom. (C'<sub>kg</sub>)</div>
+                <div class="stat-value" id="statCostoMarginal">$0 / kg</div>
+            </div>
+        </div>
+
+        <div class="spinner" id="spinner">
+            <div class="spinner-ring"></div>
+            <p>Ejecutando algoritmos de optimización por costo marginal...</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="cambiarTab('recomendaciones')">La Remesa Optimizada</button>
+            <button class="tab" onclick="cambiarTab('multidisciplinar')">Modelo Científico</button>
+            <button class="tab" onclick="cambiarTab('productos')">Productos de la Tierrita</button>
+            <button class="tab" onclick="cambiarTab('consejos')">Los Consejos de la Abuela</button>
+            <button class="tab" onclick="cambiarTab('historial')">Mis Compras</button>
+        </div>
+
+        <div class="tab-content active" id="tabRecomendaciones">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-icon">🛒</div>
+                    <h2>Lista Recomendada para el Mercado</h2>
+                </div>
+                <div class="card-body">
+                    <div class="shopping-list" id="shoppingList">
+                        <div class="empty-state">
+                            <p>Haz clic en "Generar Lista y Análisis" para calcular tu canasta óptima.</p>
+                        </div>
+                    </div>
+                    <div class="summary-box" id="summaryBox" style="display:none;">
+                        <h4>Resumen del Algoritmo de Canasta</h4>
+                        <div class="summary-row">
+                            <span>Total de Artículos:</span>
+                            <strong id="sumItems">0</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Ahorro Potencial Estimado (Frente a retail):</span>
+                            <strong id="sumAhorro">$0</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Grado de Cumplimiento:</span>
+                            <strong id="sumCumplimiento">0%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabMultidisciplinar">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-icon">📐</div>
+                    <h2>Análisis Multidisciplinar (Cálculo & Física)</h2>
+                </div>
+                <div class="card-body">
+                    <div class="sci-grid">
+                        <div class="sci-card">
+                            <h4>📊 Cálculo Diferencial & Optimización</h4>
+                            <p style="font-size: 0.85rem; color: #555;">Optimizamos la selección maximizando la Utilidad Nutricional U(x) mediante derivación respecto al Costo C(x):</p>
+                            <div class="sci-formula">C'(x) = dC/dx &nbsp;|&nbsp; E<sub>m</sub> = U'(x) / C'(x)</div>
+                            <div style="margin-top: 12px; font-size: 0.88rem;">
+                                <div class="summary-row"><span>Eficiencia Nutricional (E<sub>m</sub>):</span><strong id="sciEm">0 Pts / $1.000 COP</strong></div>
+                                <div class="summary-row"><span>Tasa de Precios (dp/dt):</span><strong id="sciDpDt">+0.0% / mes</strong></div>
+                                <div class="summary-row"><span>Costo Promedio:</span><strong id="sciCostoKg">$0 COP/kg</strong></div>
+                            </div>
+                            <p style="font-size: 0.78rem; color: #777; margin-top: 10px;">
+                                *El algoritmo selecciona hasta 3 unidades de los productos cuya tasa incremental U'/C' es máxima hasta agotar presupuesto.
+                            </p>
+                        </div>
+
+                        <div class="sci-card">
+                            <h4>🏋️ Física Mecánica & Biomecánica</h4>
+                            <p style="font-size: 0.85rem; color: #555;">Evaluación de fuerzas de tracción y prevención ergonómica para el transporte del mercado:</p>
+                            <div class="sci-formula">F<sub>empuje</sub> = M · (a + g·sinθ + μ<sub>k</sub>·g·cosθ)</div>
+                            <div style="margin-top: 12px; font-size: 0.88rem;">
+                                <div class="summary-row"><span>Masa Total (M<sub>total</sub>):</span><strong id="sciMasa">0.0 kg</strong></div>
+                                <div class="summary-row"><span>Tracción Requerida (F<sub>empuje</sub>):</span><strong id="sciFuerza">0.0 N</strong></div>
+                                <div class="summary-row"><span>Torque Lumbar (τ):</span><strong id="sciTorque">0.0 N·m</strong></div>
+                                <div class="summary-row"><span>Estado Ergonómico:</span><strong id="sciEstadoErgo" style="color: green;">SEGURO</strong></div>
+                            </div>
+                            <div id="ergoWarning" style="margin-top: 10px; padding: 8px; border-radius: 4px; font-size: 0.8rem; background: #eef7ee; color: #1e5e1e;">
+                                💡 <strong>Recomendación:</strong> Colocar los productos pesados en la base del carrito.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabProductos">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-icon">🥑</div>
+                    <h2>Catálogo de Productos Locales (Precios Corabastos Nov 2026)</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="product-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Categoría</th>
+                                    <th>Peso Aprox.</th>
+                                    <th>Precio Est. ($ COP)</th>
+                                    <th>Origen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productosBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabConsejos">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-icon">👵</div>
+                    <h2>Los Consejos de la Abuela (Ahorro)</h2>
+                </div>
+                <div class="card-body">
+                    <div class="tip-card">
+                        <div class="tip-icon">🥔</div>
+                        <div class="tip-content">
+                            <strong>Comprar en Corabastos y Plazas Locales</strong>
+                            <p>Los granos, frutas y tubérculos suelen ser entre un 20% y 35% más económicos en plazas que en hipermercados. Los precios base de esta plataforma reflejan los boletines oficiales de Corabastos de Noviembre de 2026.</p>
+                        </div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">🍌</div>
+                        <div class="tip-content">
+                            <strong>Aprovechar las Cosechas de Temporada</strong>
+                            <p>Comprar frutas en época de cosecha disminuye los costos marginales de producción y transportación.</p>
+                        </div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">🛍️</div>
+                        <div class="tip-content">
+                            <strong>Distribución y Ergonomía en el Mercado</strong>
+                            <p>Empaca siempre lo más pesado abajo (granos, líquidos). Esto mantiene el centro de masas en la base del carrito.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabHistorial">
+            <div class="card">
+                <div class="card-header" style="flex-direction: row; justify-content: space-between; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="card-header-icon">📜</div>
+                        <h2>Historial de Planificaciones Guardadas</h2>
+                    </div>
+                    <button class="btn btn-ghost" onclick="limpiarHistorial()" style="padding: 8px 12px; font-size: 0.8rem; color: #8b2020; border-color: #8b2020;">🗑️ Limpiar Historial</button>
+                </div>
+                <div class="card-body" id="historialContent">
+                    <div class="empty-state">
+                        <p>Aún no has guardado listas de mercado en tu historial local.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <p><strong>Universidad de la Canasta Familiar - CUN</strong></p>
+        <p>Modelo Multidisciplinar: Introducción a los Sistemas Informáticos | Cálculo Diferencial | Física Mecánica</p>
+        <p style="margin-top: 6px; opacity: 0.8;">© 2026 - Proyecto Académico Integrado</p>
+    </footer>
+
+    <div id="pdfContainer" class="pdf-export-container">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="font-family:'Playfair Display',serif; color:#1a3a2a;">Eco Canasta 360 - Informe de Canasta Familiar</h1>
+            <p style="color:#666; font-size: 0.9rem;">Optimización Presupuestal, Análisis de Cálculo & Física Mecánica</p>
+            <p id="pdfFecha" style="font-size:0.8rem; color:#888;"></p>
+        </div>
+        <hr>
+        <div id="pdfContenido"></div>
+    </div>
+
+    <!-- BOTÓN Y ESTRUCTURA DEL CHATBOT: DISEÑO CAMPESINO -->
+    <button class="cb-launch" id="cbLaunch" aria-label="Abrir Asistente" onclick="toggleChat()">
+        <span class="avatar-icon">🧑‍🌾</span>
+        Don Campo 360
+    </button>
+    <div class="cb-panel" id="cbPanel">
+        <div class="cb-head">
+            <div class="cb-head-avatar">🧑‍🌾</div>
+            <div>
+                <h3>Don Campo</h3>
+                <small>Su Asesor de la Tierrita</small>
+            </div>
+            <button onclick="toggleChat()">×</button>
+        </div>
+        <div class="cb-log" id="cbLog">
+            <!-- Contenido Dinámico al abrir -->
+        </div>
+        <form class="cb-form" onsubmit="event.preventDefault(); enviarMensaje();">
+            <input type="text" id="cbInput" placeholder="Escriba aquí sumercé..." autocomplete="off">
+            <button type="submit">➔</button>
+        </form>
+        <div class="cb-note">Don Campo analiza su carrito en tiempo real.</div>
+    </div>
+
+    <script>
+        const productos = {
+            'Granos y Cereales': [
+                {nombre: 'Arroz blanco tradicional', precio: 2400, unidad: 'kg', nutricion: 130, pesoKg: 1.0, tasaCambioPrecio: 2.1, colombiano: true},
+                {nombre: 'Frijol cargamanto', precio: 9500, unidad: 'kg', nutricion: 180, pesoKg: 1.0, tasaCambioPrecio: 4.5, colombiano: true},
+                {nombre: 'Lenteja seleccionada', precio: 6500, unidad: 'kg', nutricion: 165, pesoKg: 1.0, tasaCambioPrecio: -1.2, colombiano: false},
+                {nombre: 'Maíz petaco', precio: 4000, unidad: 'kg', nutricion: 110, pesoKg: 1.0, tasaCambioPrecio: 0.5, colombiano: true},
+                {nombre: 'Avena en hojuelas', precio: 4800, unidad: '500g', nutricion: 140, pesoKg: 0.5, tasaCambioPrecio: 1.0, colombiano: true}
+            ],
+            'Frutas y Verduras': [
+                {nombre: 'Papa pastusa', precio: 3200, unidad: 'kg', nutricion: 120, pesoKg: 1.0, tasaCambioPrecio: -3.5, colombiano: true},
+                {nombre: 'Papa criolla', precio: 6000, unidad: 'kg', nutricion: 125, pesoKg: 1.0, tasaCambioPrecio: 5.0, colombiano: true},
+                {nombre: 'Plátano verde', precio: 2500, unidad: 'kg', nutricion: 115, pesoKg: 1.0, tasaCambioPrecio: 1.8, colombiano: true},
+                {nombre: 'Tomate chonto', precio: 3800, unidad: 'kg', nutricion: 90, pesoKg: 1.0, tasaCambioPrecio: 5.2, colombiano: true},
+                {nombre: 'Zanahoria fresca', precio: 2500, unidad: 'kg', nutricion: 95, pesoKg: 1.0, tasaCambioPrecio: -2.0, colombiano: true},
+                {nombre: 'Cebolla cabezona', precio: 3000, unidad: 'kg', nutricion: 85, pesoKg: 1.0, tasaCambioPrecio: 0.8, colombiano: true},
+                {nombre: 'Aguacate Hass', precio: 7500, unidad: 'kg', nutricion: 160, pesoKg: 1.0, tasaCambioPrecio: 3.1, colombiano: true}
+            ],
+            'Proteínas y Lácteos': [
+                {nombre: 'Huevo A (Panal x30)', precio: 17500, unidad: 'panal', nutricion: 220, pesoKg: 1.8, tasaCambioPrecio: 2.0, colombiano: true},
+                {nombre: 'Leche entera fresca', precio: 4500, unidad: 'litro', nutricion: 140, pesoKg: 1.0, tasaCambioPrecio: 1.5, colombiano: true},
+                {nombre: 'Queso campesino', precio: 10500, unidad: '500g', nutricion: 175, pesoKg: 0.5, tasaCambioPrecio: 2.8, colombiano: true},
+                {nombre: 'Pechuga de pollo', precio: 15800, unidad: 'kg', nutricion: 240, pesoKg: 1.0, tasaCambioPrecio: 3.0, colombiano: true},
+                {nombre: 'Carne molida magra', precio: 19500, unidad: 'kg', nutricion: 230, pesoKg: 1.0, tasaCambioPrecio: 4.1, colombiano: true}
+            ],
+            'Despensa y Locales': [
+                {nombre: 'Panela entera de trapiche', precio: 4800, unidad: 'kg', nutricion: 130, pesoKg: 1.0, tasaCambioPrecio: 0.0, colombiano: true},
+                {nombre: 'Aceite vegetal', precio: 13200, unidad: 'litro', nutricion: 150, pesoKg: 0.9, tasaCambioPrecio: 1.2, colombiano: false},
+                {nombre: 'Chocolate de mesa tradicional', precio: 6200, unidad: '500g', nutricion: 135, pesoKg: 0.5, tasaCambioPrecio: 2.4, colombiano: true},
+                {nombre: 'Maíz para mazamorra', precio: 3800, unidad: '500g', nutricion: 120, pesoKg: 0.5, tasaCambioPrecio: 0.0, colombiano: true}
+            ]
+        };
+
+        let ultimaSeleccion = [];
+
+        function calcularRecomendacion(presupuesto, preferencia) {
+            let acumulado = [];
+            let gastado = 0;
+            let listaCandidatos = [];
+
+            Object.keys(productos).forEach(cat => {
+                if (preferencia === 'todas' || preferencia === cat) {
+                    productos[cat].forEach(p => {
+                        let ratioMarginal = (p.nutricion / p.precio) * 1000;
+                        listaCandidatos.push({ ...p, categoria: cat, ratio: ratioMarginal });
+                    });
+                }
+            });
+
+            listaCandidatos.sort((a, b) => b.ratio - a.ratio);
+            let maxUnidadesPermitidas = 3; 
+            
+            for (let item of listaCandidatos) {
+                let unidadesCompradas = 0;
+                while (gastado + item.precio <= presupuesto && unidadesCompradas < maxUnidadesPermitidas) {
+                    let existente = acumulado.find(i => i.nombre === item.nombre);
+                    if (existente) {
+                        existente.cantidad += 1;
+                        existente.precioTotal += item.precio;
+                        existente.pesoTotal += item.pesoKg;
+                    } else {
+                        acumulado.push({ ...item, cantidad: 1, precioTotal: item.precio, pesoTotal: item.pesoKg });
+                    }
+                    gastado += item.precio;
+                    unidadesCompradas++;
+                }
+            }
+            return acumulado;
+        }
+
+        function ejecutarAnalisisMultidisciplinar(listaItems, presupuesto) {
+            if (listaItems.length === 0) return;
+
+            let totalGastado = listaItems.reduce((acc, i) => acc + i.precioTotal, 0);
+            let masaTotal = listaItems.reduce((acc, i) => acc + i.pesoTotal, 0); 
+            let nutricionTotal = listaItems.reduce((acc, i) => acc + (i.nutricion * i.cantidad), 0);
+            let totalUnidades = listaItems.reduce((acc, i) => acc + i.cantidad, 0);
+            let sumaTasas = listaItems.reduce((acc, i) => acc + (i.tasaCambioPrecio * i.cantidad), 0);
+
+            let costoMarginalKg = masaTotal > 0 ? (totalGastado / masaTotal) : 0;
+            let eficienciaMarginal = totalGastado > 0 ? ((nutricionTotal / totalGastado) * 1000) : 0;
+            let dpdtPromedio = totalUnidades > 0 ? (sumaTasas / totalUnidades) : 0;
+
+            let g = 9.81; 
+            let a = 0.2;  
+            let muk = 0.05; 
+            let thetaDeg = parseFloat(document.getElementById('terrenoInclinacion').value) || 0;
+            let thetaRad = thetaDeg * (Math.PI / 180);
+
+            let fEmpuje = masaTotal * (a + (g * Math.sin(thetaRad)) + (muk * g * Math.cos(thetaRad)));
+            let rArm = 0.85; 
+            let torque = rArm * (masaTotal * g) * Math.sin(30 * Math.PI / 180);
+
+            document.getElementById('statTotal').innerText = `$${totalGastado.toLocaleString('es-CO')}`;
+            document.getElementById('statRestante').innerText = `$${(presupuesto - totalGastado).toLocaleString('es-CO')}`;
+            document.getElementById('statMasa').innerText = `${masaTotal.toFixed(1)} kg`;
+            document.getElementById('statCostoMarginal').innerText = `$${Math.round(costoMarginalKg).toLocaleString('es-CO')} / kg`;
+
+            document.getElementById('sciEm').innerText = `${eficienciaMarginal.toFixed(2)} Ptos / $1.000 COP`;
+            document.getElementById('sciDpDt').innerText = `${dpdtPromedio >= 0 ? '+' : ''}${dpdtPromedio.toFixed(1)}% / mes`;
+            document.getElementById('sciCostoKg').innerText = `$${Math.round(costoMarginalKg).toLocaleString('es-CO')} COP/kg`;
+
+            document.getElementById('sciMasa').innerText = `${masaTotal.toFixed(1)} kg`;
+            document.getElementById('sciFuerza').innerText = `${fEmpuje.toFixed(1)} N`;
+            document.getElementById('sciTorque').innerText = `${torque.toFixed(1)} N·m`;
+
+            let ergoElem = document.getElementById('sciEstadoErgo');
+            let ergoWarnElem = document.getElementById('ergoWarning');
+
+            if (masaTotal > 20) {
+                ergoElem.innerText = '⚠️ CUIDADO (CARGA ALTA)';
+                ergoElem.style.color = '#8b2020';
+                ergoWarnElem.style.background = '#fde8e8';
+                ergoWarnElem.style.color = '#8b2020';
+                ergoWarnElem.innerHTML = '⚠️ <strong>Alerta Ergonómica:</strong> La carga supera los 20 kg. Se aconseja utilizar carrito de dos ejes para reducir el Torque lumbar.';
+            } else {
+                ergoElem.innerText = '✅ SEGURO';
+                ergoElem.style.color = '#1e5e1e';
+                ergoWarnElem.style.background = '#eef7ee';
+                ergoWarnElem.style.color = '#1e5e1e';
+                ergoWarnElem.innerHTML = '💡 <strong>Recomendación Ergonómica:</strong> Carga dentro de límites biomecánicos seguros. Coloca líquidos al fondo para optimizar el Centro de Masa.';
+            }
+        }
+
+        function generarPlanificado() {
+            let presupuestoVal = document.getElementById('presupuesto').value;
+            let preferenciaVal = document.getElementById('preferencia').value;
+            let inclinacionVal = document.getElementById('terrenoInclinacion').value;
+            
+            if(!presupuestoVal || !preferenciaVal || !inclinacionVal) {
+                alert("Por favor completa todas las selecciones antes de generar el planificado.");
+                return;
+            }
+
+            let presupuesto = parseFloat(presupuestoVal);
+            document.getElementById('spinner').classList.add('active');
+
+            setTimeout(() => {
+                document.getElementById('spinner').classList.remove('active');
+                let seleccion = calcularRecomendacion(presupuesto, preferenciaVal);
+                ultimaSeleccion = seleccion;
+
+                let htmlList = '';
+                let totalGastado = 0;
+                let totalItemsFisicos = 0;
+
+                seleccion.forEach(item => {
+                    totalGastado += item.precioTotal;
+                    totalItemsFisicos += item.cantidad;
+                    htmlList += `
+                        <div class="list-item">
+                            <div class="item-info">
+                                <span class="item-category">${item.categoria}</span>
+                                <div>
+                                    <div class="item-name">${item.nombre} <span style="color:var(--accent); font-weight:bold;">x${item.cantidad}</span></div>
+                                    <div class="item-details">Und base: ${item.unidad} | Peso Acum.: ${item.pesoTotal.toFixed(1)} kg | Ratio E: ${item.ratio.toFixed(1)}</div>
+                                </div>
+                            </div>
+                            <div class="item-price">$${item.precioTotal.toLocaleString('es-CO')}</div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('shoppingList').innerHTML = htmlList || '<div class="empty-state"><p>La platica no alcanza ni pa un chicle. Suba el presupuesto.</p></div>';
+                document.getElementById('summaryBox').style.display = 'block';
+                document.getElementById('sumItems').innerText = totalItemsFisicos;
+                
+                let porcentajeCumplimiento = Math.min(100, Math.round((totalGastado / presupuesto) * 100));
+                let ahorro = Math.round(totalGastado * 0.15); 
+                
+                document.getElementById('sumAhorro').innerText = `$${ahorro.toLocaleString('es-CO')}`;
+                document.getElementById('sumCumplimiento').innerText = `${porcentajeCumplimiento}%`; 
+
+                ejecutarAnalisisMultidisciplinar(seleccion, presupuesto);
+            }, 300);
+        }
+
+        function cargarTablaProductos() {
+            let body = document.getElementById('productosBody');
+            let html = '';
+            Object.keys(productos).forEach(cat => {
+                productos[cat].forEach(p => {
+                    html += `
+                        <tr>
+                            <td><strong>${p.nombre}</strong></td>
+                            <td><span class="category-badge">${cat}</span></td>
+                            <td>${p.pesoKg} kg (${p.unidad})</td>
+                            <td>$${p.precio.toLocaleString('es-CO')}</td>
+                            <td>${p.colombiano ? '🇨🇴 Local' : '📦 Importado'}</td>
+                        </tr>
+                    `;
+                });
+            });
+            body.innerHTML = html;
+        }
+
+        function cambiarTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-pill').forEach(el => el.classList.remove('active'));
+
+            const map = { 'recomendaciones': 0, 'multidisciplinar': 1, 'productos': 2, 'consejos': 3, 'historial': 4 };
+            const tabIds = { 'recomendaciones': 'tabRecomendaciones', 'multidisciplinar': 'tabMultidisciplinar', 'productos': 'tabProductos', 'consejos': 'tabConsejos', 'historial': 'tabHistorial' };
+
+            let idx = map[tab];
+            document.getElementById(tabIds[tab]).classList.add('active');
+            document.querySelectorAll('.tab')[idx].classList.add('active');
+            document.querySelectorAll('.nav-pill')[idx].classList.add('active');
+        }
+
+        function guardarEnHistorial() {
+            if (ultimaSeleccion.length === 0) return alert('Primero debes generar una lista de mercado, sumercé.');
+
+            let historial = JSON.parse(localStorage.getItem('marketcol_historial') || '[]');
+            let total = ultimaSeleccion.reduce((a, b) => a + b.precioTotal, 0);
+            let masa = ultimaSeleccion.reduce((a, b) => a + b.pesoTotal, 0);
+
+            historial.unshift({ fecha: new Date().toLocaleString('es-CO'), total, masa, cantidad: ultimaSeleccion.length });
+            localStorage.setItem('marketcol_historial', JSON.stringify(historial));
+            actualizarHistorialDOM();
+            alert(`✅ Compra de $${parseInt(total).toLocaleString('es-CO')} guardada en el historial.`); 
+        }
+
+        function actualizarHistorialDOM() {
+            let historial = JSON.parse(localStorage.getItem('marketcol_historial') || '[]');
+            let container = document.getElementById('historialContent');
+            if (historial.length === 0) return container.innerHTML = '<div class="empty-state"><p>Aún no has guardado listas de mercado en tu historial.</p></div>';
+
+            let html = '';
+            historial.forEach((h, idx) => {
+                html += `
+                    <div style="padding:14px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <strong>Mercado #${historial.length - idx} - ${h.fecha}</strong>
+                            <div style="font-size:0.8rem; color:#666;">${h.cantidad} grupos de prod. | Peso total: ${h.masa.toFixed(1)} kg</div>
+                        </div>
+                        <div style="font-family:'Playfair Display',serif; font-weight:bold; color:var(--primary); font-size:1.1rem;">
+                            $${h.total.toLocaleString('es-CO')}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function limpiarHistorial() {
+            if(confirm('¿Seguro que desea borrar el historial, mijo?')) {
+                localStorage.removeItem('marketcol_historial');
+                actualizarHistorialDOM();
+            }
+        }
+
+        async function exportarPDF() {
+            if (ultimaSeleccion.length === 0) return alert('Genera una lista antes de exportar a PDF.');
+
+            const { jsPDF } = window.jspdf;
+            document.getElementById('pdfFecha').innerText = `Fecha de generación: ${new Date().toLocaleString('es-CO')}`;
+
+            let htmlPdf = '<h3>Lista de Productos Seleccionados</h3><ul style="margin-left:20px; margin-bottom:20px;">';
+            let total = 0, masa = 0;
+            ultimaSeleccion.forEach(i => {
+                total += i.precioTotal;
+                masa += i.pesoTotal;
+                htmlPdf += `<li><strong>${i.nombre} (x${i.cantidad})</strong> (${i.categoria}): $${i.precioTotal.toLocaleString('es-CO')} - ${i.pesoTotal.toFixed(1)} kg</li>`;
+            });
+            htmlPdf += '</ul><hr><h3>Resumen Científico del Mercado</h3>';
+            htmlPdf += `<p><strong>Costo Total:</strong> $${total.toLocaleString('es-CO')}</p>
+                        <p><strong>Masa Total:</strong> ${masa.toFixed(1)} kg</p>
+                        <p><strong>Análisis Ergonómico:</strong> Carga ${masa > 20 ? 'elevada. Distribuir pesos en base.' : 'segura dentro del confort.'}</p>`;
+
+            document.getElementById('pdfContenido').innerHTML = htmlPdf;
+            try {
+                const canvas = await html2canvas(document.getElementById('pdfContainer'), { scale: 2 });
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 210, (canvas.height * 210) / canvas.width);
+                pdf.save(`EcoCanasta360_Informe_${new Date().toISOString().slice(0,10)}.pdf`);
+            } catch (err) { alert('Error al generar PDF.'); }
+        }
+
+        // --- LÓGICA DE DON CAMPO (CHATBOT) ---
+        function toggleChat() {
+            const panel = document.getElementById('cbPanel');
+            panel.classList.toggle('open');
+            if(panel.classList.contains('open')){
+                document.getElementById('cbInput').focus();
+                if(!window.chatInicializado) {
+                    let hora = new Date().getHours();
+                    let saludo = hora < 12 ? 'Buenos días' : (hora < 18 ? 'Buenas tardes' : 'Buenas noches');
+                    document.getElementById('cbLog').innerHTML = `
+                        <div class="cb-msg">¡${saludo} sumercé! Soy <b>Don Campo</b>, su asesor de la tierrita. Yo le ayudo a revisar su mercado pa' que le rinda la plata y no se me joda la espalda. ¿En qué le sirvo hoy?</div>
+                        <div class="cb-chips">
+                            <button class="cb-chip" onclick="enviarMensajeRapido('Analiza mi lista actual')">🛒 Revíseme el mercado</button>
+                            <button class="cb-chip" onclick="enviarMensajeRapido('¿Para qué sirve este proyecto?')">🤔 ¿Pa' qué es esto?</button>
+                            <button class="cb-chip" onclick="enviarMensajeRapido('Dame un consejo de ahorro')">🥔 Consejo pa' ahorrar</button>
+                        </div>
+                    `;
+                    window.chatInicializado = true;
+                }
+            }
+        }
+
+        function enviarMensajeRapido(texto) {
+            document.getElementById('cbInput').value = texto;
+            enviarMensaje();
+        }
+
+        function enviarMensaje() {
+            const input = document.getElementById('cbInput');
+            const texto = input.value.trim();
+            if (!texto) return;
+
+            agregarMensaje(texto, 'me');
+            input.value = '';
+
+            const typing = document.createElement('div');
+            typing.className = 'cb-typing';
+            typing.id = 'typingIndicator';
+            typing.innerText = 'Don Campo está pensando...';
+            document.getElementById('cbLog').appendChild(typing);
+            document.getElementById('cbLog').scrollTop = document.getElementById('cbLog').scrollHeight;
+
+            setTimeout(() => {
+                document.getElementById('typingIndicator').remove();
+                agregarMensaje(generarRespuestaBot(texto), 'bot');
+            }, 900);
+        }
+
+        function agregarMensaje(texto, sender) {
+            const log = document.getElementById('cbLog');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'cb-msg ' + (sender === 'me' ? 'me' : '');
+            msgDiv.innerHTML = texto;
+            log.appendChild(msgDiv);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function generarRespuestaBot(pregunta) {
+            // Normalizamos quitando acentos para facilitar la interpretación de sinónimos
+            const p = pregunta.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            // Función auxiliar para buscar múltiples sinónimos o frases
+            const incluye = (palabras) => palabras.some(palabra => p.includes(palabra));
+
+            // 1. FILTRO DE GROSERÍAS
+            if (incluye(['mierda', 'estupido', 'idiota', 'puta', 'imbecil', 'malparido', 'gonorrea', 'pirobo', 'perra', 'pendejo', 'bobo', 'marica', 'huevon', 'hp', 'hijueputa'])) {
+                return "¡Uy, sumercé, bajémosle al tonito! Yo soy un humilde campesino que está aquí pa' ayudarle con el mercadito de buena fe. Tratémonos con respeto, ¿listo? Hágale, pregúnteme otra cosita.";
+            }
+
+            // 2. CREADOR DEL PROYECTO
+            if (incluye(['quien desarrollo', 'quien creo', 'creador', 'jose gomez', 'autor', 'quien hizo', 'invento', 'quien programo'])) {
+                return "<b>👨‍💻 Sobre el Creador:</b><hr>Le cuento, mijo, que esta plataforma fue creada y desarrollada por <b>Jose Gomez</b>. Él se craneó todo esto con la intención social de hacerle un bien a la comunidad. Quería automatizar esas cosas difíciles pa' la gente que de pronto no tiene los conocimientos técnicos, todo en pro del bienestar de las familias.";
+            }
+
+            // 3. TECNOLOGÍAS USADAS (NUEVO)
+            if (incluye(['tecnologia', 'lenguaje', 'programo', 'como se hizo', 'codigo', 'software', 'herramienta', 'html', 'javascript', 'css', 'desarrollo'])) {
+                return "<b>💻 ¿Con qué fierros armaron esto?</b><hr>Vea sumercé, Jose Gomez armó este rancho digital usando tecnologías web estándar: <b>HTML5, CSS3 y JavaScript puro</b>, pa' que sea rápido y funcione en cualquier cacharro.<br><br>Además, pa' generar esos PDFs bien presentados que usted descarga, le metió dos bibliotecas de código abierto que se llaman <i>html2canvas</i> y <i>jsPDF</i>. Todo el cerebro de la página corre ahí mismo en su navegador, ligerito y sin gastar recursos de más.";
+            }
+
+            // 4. OBJETIVO DEL PROYECTO
+            if (incluye(['objetivo', 'proyecto', 'para que sirve', 'proposito', 'por que', 'mision', 'meta', 'razon', 'de que trata'])) {
+                return "<b>🌾 Nuestro Objetivo y el Porqué:</b><hr>Pues mijo, la meta de este proyecto de la CUN (desarrollado por Jose Gomez) nace porque sabemos que administrar la platica en los hogares colombianos está berraco con esos precios de la comida que suben y bajan. <br><br>Queremos ayudar a las familias, especialmente a las que más les pega la inflación, a mercar de forma inteligente. Juntamos la platica (optimización y presupuesto), la ciencia (cálculo y física) y lo mejor de nuestra tierrita pa' que tomen decisiones eficientes, coman bien, hagan rendir los pesos y, de ñapa, no se lastimen la espalda.";
+            }
+            
+            // 5. ANÁLISIS DE LA LISTA / CARRITO
+            if (incluye(['analiza', 'lista', 'resumen', 'revis', 'carrito', 'compra', 'mercado', 'canasto'])) {
+                if (!ultimaSeleccion || ultimaSeleccion.length === 0) {
+                    return "Aún no ha echado nada al canasto, sumercé. Llene su presupuesto ahí arriba y dele a 'Generar Lista' pa' que yo se la revise.";
+                }
+                let total = ultimaSeleccion.reduce((a, b) => a + b.precioTotal, 0);
+                let masa = ultimaSeleccion.reduce((a, b) => a + b.pesoTotal, 0);
+                let cargaAviso = masa > 20 ? '¡Pilas! Ese mercadito le quedó pesando <b>más de 20kg</b>, llévese un buen carrito de dos ejes pa que no se lastime.' : 'El peso está manejable, lo puede cargar sin problema.';
+                return `<b>🛒 Revisión de su canasto:</b><hr>Lleva <b>${ultimaSeleccion.length}</b> productos variados. Eso le pesa en total <b>${masa.toFixed(1)} kg</b> y se le fueron <b>$${total.toLocaleString('es-CO')}</b> pesitos. ${cargaAviso} ¡Le rindió bastante la plata!`;
+            }
+
+            // 6. EXPLICACIÓN DE FÍSICA MECÁNICA (MEJORADA)
+            if (incluye(['fisica', 'fuerza', 'peso', 'torque', 'inclinacion', 'mecanica', 'espalda', 'carga', 'esfuerzo', 'gravedad', 'empuje'])) {
+                return "<b>⚙️ La Física Mecánica (Cuidando la espalda):</b><hr>Mijo, pa' que no se me joda la columna, aquí aplicamos <b>Física Mecánica</b> calculando la <i>Fuerza de Empuje</i>.<br><br>Usamos la fórmula: <code>F = M · (a + g·sinθ + μk·g·cosθ)</code><br>Donde tomamos la masa (<b>M</b>) de todo su mercado, la gravedad (<b>g</b>), y la inclinación del terreno (<b>θ</b>) que usted puso arriba. Con eso medimos el <i>Torque lumbar</i>. Si es muy alto, le aconsejamos echar lo pesado al fondo pa' bajar el centro de gravedad. ¡Pura ciencia pa' su bienestar!";
+            }
+
+            // 7. EXPLICACIÓN DE CÁLCULO DIFERENCIAL (MEJORADA)
+            if (incluye(['calculo', 'marginal', 'derivada', 'eficiencia', 'diferencial', 'matematica', 'nutricion', 'optimiza', 'algoritmo'])) {
+                return "<b>📊 El Cálculo Diferencial (Rindiendo la platica):</b><hr>¡Aquí está la magia de los números! Aplicamos la derivada del Costo respecto a la Utilidad Nutricional para maximizar la <b>Eficiencia Marginal (U'/C')</b>.<br><br>En palabras de cristiano: el sistema evalúa cuánto alimento (vitaminas/energía) le da cada producto por cada peso que gasta. El algoritmo va escogiendo y metiendo al carrito lo más eficiente, pasito a pasito, iterando hasta que se agota el presupuesto. ¡Así le sacamos el jugo a cada centavo!";
+            }
+
+            // 8. CONSEJOS DE AHORRO
+            if (incluye(['ahorr', 'consej', 'corabastos', 'plaza', 'barato', 'econom', 'tip', 'recomendacion'])) {
+                return "<b>🥔 Consejo de Don Campo:</b><hr>Si tiene familia grande, váyase pa' Corabastos o la plaza de su barrio. Compre la papa pastusa por bulto y busque las frutas que estén en temporada de cosecha. En los hipermercados de cadena le sacan los ojos cobrándole los empaques bonitos y la refrigeración.";
+            }
+
+            // 9. SALUDOS
+            if (incluye(['hola', 'salud', 'buen', 'que tal', 'como esta', 'q hubo', 'quihubo'])) {
+                return "¡Qué más, sumercé! Recuerde que estoy aquí pendiente pa' explicarle cómo funciona la ciencia de esta página o revisarle cómo le quedó armada la remesa. Pregúnteme con confianza.";
+            }
+
+            // 10. RESPUESTA POR DEFECTO MÁS INTELIGENTE
+            return "Vea pues, ahí me dejó pensando, mijo. Puede preguntarme sobre <b>quién creó esto</b>, las <b>tecnologías</b> que tiene por debajo, cómo hacemos el <b>cálculo matemático</b>, la <b>física</b> de los pesos, o simplemente pídame que <b>revise su mercado</b>. Intente preguntarme con otras palabritas a ver si le atino.";
+        }
+
+        window.onload = function() {
+            cargarTablaProductos();
+            actualizarHistorialDOM();
+        };
+    </script>
+</body>
+</html>
